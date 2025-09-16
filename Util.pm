@@ -1,9 +1,11 @@
-use 5.040.2;
+use 5.042;
+no source::encoding;
 use warnings FATAL => 'all';
 use DDP {output => 'STDOUT', array_max => 10, show_memsize => 1};
 use Devel::Confess 'color';
 package Util;
-use 5.040.2;
+use 5.042;
+no source::encoding;
 use warnings FATAL => 'all';
 use autodie ':default';
 use Cwd 'getcwd';
@@ -11,7 +13,7 @@ use Scalar::Util 'looks_like_number';
 use File::Find 'find';
 use Cwd 'getcwd';
 use File::Temp 'tempfile';
-use FindBin qw( $RealScript );
+use FindBin '$RealScript';
 use List::Util qw(min max sum);
 use Capture::Tiny 'capture';
 use DDP {output => 'STDOUT', array_max => 10, show_memsize => 1};
@@ -23,7 +25,57 @@ use File::Copy 'cp';
 use POSIX 'lgamma';
 use Term::ANSIColor;
 
-our @EXPORT = qw(average_pre_rec_plot average_roc_plot barplot colored_table combined_plots_in_rows density_scatterplot dir execute file2string format_commas get_sample_ID heatmaps_in_rows hist2d_in_rows histogram json_file_to_ref list_regex_files multiline_plot num_arrays_equal plots_in_rows pvalue plot p_adjust random_key random_value read_table ref_to_json_file scatterplot scatterplot_2d_color scatterplot_2d_groups_color venn venn_proportional_area violin_plot workbook_to_hash worksheet_to_hash make_colormap violin_subplots wide_plot);
+our @EXPORT = qw(average_pre_rec_plot average_roc_plot barplot colored_table combined_plots_in_rows density_scatterplot dir execute file2string format_commas get_sample_ID heatmaps_in_rows hist2d_in_rows histogram json_file_to_ref list_regex_files multiline_plot num_arrays_equal plots_in_rows pvalue plot p_adjust rand_between random_key random_value read_table ref_to_json_file scatterplot scatterplot_2d_color scatterplot_2d_groups_color venn venn_proportional_area violin_plot workbook_to_hash worksheet_to_hash make_colormap violin_subplots wide_plot);
+my @ax_methods = (
+'ArtistList', 'add_child_axes', 'add_collection', 'add_container', 'add_image', 'add_line', 'add_patch', 'add_table', 'apply_aspect', 'autoscale_view', 'axison', 'bxp', 'callbacks', 'can_pan', 'can_zoom', 'child_axes', 'collections', 'containers', 'contains_point', 'dataLim', 'drag_pan', 'end_pan', 'fmt_xdata', 'fmt_ydata', 'format_coord', 'format_xdata', 'format_ydata', #'get_adjustable', 'get_anchor', 'get_aspect', 'get_autoscale_on', 'get_autoscalex_on', 'get_autoscaley_on', 'get_axes_locator', 'get_axisbelow', 'get_box_aspect', 'get_data_ratio', 'get_fc', 'get_forward_navigation_events', 'get_frame_on', 'get_gridspec', 'get_images', 'get_legend', 'get_legend_handles_labels', 'get_lines', 'get_navigate', 'get_navigate_mode', 'get_position', 'get_rasterization_zorder', 'get_shared_x_axes', 'get_shared_y_axes', 'get_subplotspec', 'get_title', 'get_xaxis', 'get_xaxis_text1_transform', 'get_xaxis_text2_transform', 'get_xaxis_transform', 'get_xbound', 'get_xgridlines', 'get_xlabel', 'get_xlim', 'get_xmajorticklabels', 'get_xmargin', 'get_xminorticklabels', 'get_xscale', 'get_xticklabels', 'get_xticklines', 'get_xticks', 'get_yaxis', 'get_yaxis_text1_transform', 'get_yaxis_text2_transform', 'get_yaxis_transform', 'get_ybound', 'get_ygridlines', 'get_ylabel', 'get_ylim', 'get_ymajorticklabels', 'get_ymargin', 'get_yminorticklabels', 'get_yscale', 'get_yticklabels', 'get_yticklines', 'get_yticks','has_data',
+'ignore_existing_data_limits', 'in_axes', 'indicate_inset', 'indicate_inset_zoom', 'inset_axes', 'invert_xaxis', 'invert_yaxis', 'label_outer', 'legend_', 'name', 'pcolorfast', 'redraw_in_frame', 'relim', 'reset_position', 'secondary_xaxis', 'secondary_yaxis', 'set_adjustable', 'set_anchor', 'set_aspect', 'set_autoscale_on', 'set_autoscalex_on', 'set_autoscaley_on', 'set_axes_locator', 'set_axis_off', 'set_axis_on', 'set_axisbelow', 'set_box_aspect', 'set_fc', 'set_forward_navigation_events', 'set_frame_on', 'set_mouseover( ', 'set_navigate', 'set_navigate_mode', 'set_position', 'set_prop_cycle', 'set_rasterization_zorder', 'set_subplotspec', 'set_title', 'set_xbound', 'set_xlabel',
+'set_xlim', # ax.set_xlim(left, right), or ax.set_xlim(right = 180)
+'set_xmargin', 'set_xscale', 'set_xticklabels', 'set_xticks', 'set_ybound', 'set_ylabel', 'set_ylim', 'set_ymargin', 'set_yscale', 'set_yticklabels', 'set_yticks', 'sharex', 'sharey', 'spines', 'start_pan', 'tables', 'titleOffsetTrans', 'transAxes', 'transData', 'transLimits', 'transScale', 'update_datalim', 'use_sticky_edges', 'viewLim', 'violin', 'xaxis', 'xaxis_date', 'xaxis_inverted', 'yaxis', 'yaxis_date', 'yaxis_inverted');
+my @fig_methods =  ('add_artist','add_axes','add_axobserver','add_callback','add_gridspec', 'add_subfigure', 'add_subplot','align_labels','align_titles','align_xlabels','align_ylabels','artists',  'autofmt_xdate',
+	#'axes', # same as plt
+'bbox','bbox_inches','canvas','clear','clf','clipbox',
+'colorbar', # same name as in plt, have to use on case-by-case
+'contains','convert_xunits','convert_yunits','delaxes','dpi','dpi_scale_trans','draw', 'draw_artist','draw_without_rendering','figbbox','figimage',
+#	'figure',	'findobj',
+'format_cursor_data', 'frameon',
+#'gca','get_agg_filter','get_alpha','get_animated','get_axes','get_children', 'get_clip_box','get_clip_on','get_clip_path','get_constrained_layout','get_constrained_layout_pads', 'get_cursor_data','get_default_bbox_extra_artists','get_dpi','get_edgecolor','get_facecolor', #'get_figheight',
+#'get_figure',
+#'get_figwidth', 
+#'get_frameon','get_gid','get_in_layout','get_label', 'get_layout_engine','get_linewidth','get_mouseover','get_path_effects','get_picker', 'get_rasterized','get_size_inches','get_sketch_params','get_snap', 'get_suptitle',
+#'get_supxlabel', 'get_supylabel','get_tight_layout','get_tightbbox','get_transform', 'get_transformed_clip_path_and_affine',
+	#'get_url',	'get_visible','get_window_extent','get_zorder',
+#	'ginput',, keeping plt instead
+	'have_units','images','is_transform_set',
+#	'legend',	'legends',
+	'lines','mouseover', 'number','patch','patches','pchanged','pick','pickable','properties','remove', 'remove_callback',
+	#'savefig', keeping plt instead
+	'sca','set','set_agg_filter','set_alpha','set_animated','set_canvas', 'set_clip_box','set_clip_on','set_clip_path','set_constrained_layout' ,'set_constrained_layout_pads', 'set_dpi','set_edgecolor','set_facecolor',
+	'set_figheight', # default 4.8
+#	'set_figure', # deprecated as of matplotlib 3.10.0
+	'set_figwidth',# default 6.4
+	'set_frameon','set_gid','set_in_layout','set_label','set_layout_engine','set_linewidth', 'set_mouseover','set_path_effects','set_picker','set_rasterized','set_size_inches', 'set_sketch_params','set_snap','set_tight_layout','set_transform','set_url','set_visible', 'set_zorder',
+#	'show', # keeping plt instead
+	'stale','stale_callback','sticky_edges','subfigs','subfigures',
+#	'subplot_mosaic',
+	'subplotpars',
+#	'subplots',	'subplots_adjust',
+	'suppressComposite',
+#	'suptitle', # keeping plt instead
+	'supxlabel','supylabel',
+	#'text',
+	'texts',
+	#'tight_layout',
+	'transFigure','transSubfigure', 'update','update_from',
+	#'waitforbuttonpress',
+	'zorder'
+);
+my @plt_methods = ('AbstractContextManager','Annotation','Arrow','Artist','AutoLocator','AxLine','Axes', 'BackendFilter','Button','Circle','Colorizer','ColorizingArtist','Colormap','Enum', 'ExitStack','Figure','FigureBase','FigureCanvasBase','FigureManagerBase',' FixedFormatter','FixedLocator','FormatStrFormatter','Formatter','FuncFormatter','GridSpec', 'IndexLocator','Line2D','LinearLocator','Locator','LogFormatter','LogFormatterExponent', 'LogFormatterMathtext','LogLocator','MaxNLocator','MouseButton','MultipleLocator','Normalize', 'NullFormatter','NullLocator','PolarAxes','Polygon','Rectangle','ScalarFormatter', 'Slider','Subplot','SubplotSpec','TYPE_CHECKING','Text','TickHelper','Widget','acorr', 'angle_spectrum','annotate','annotations','arrow','autoscale','autumn','axes','axhline', 'axhspan','axis','axline','axvline','axvspan','backend_registry','bar','bar_label','barbs', 'barh','bone','box','boxplot','broken_barh','cast','cbook','cla','clabel',
+	#'clf', # I don't think you'd ever do that, also redundant with fig
+	'clim', 'close','cm','cohere','color_sequences','colorbar','colormaps','connect','contour', 'contourf','cool','copper','csd','cycler','delaxes','disconnect','draw','draw_all', 'draw_if_interactive','ecdf','errorbar','eventplot','figaspect','figimage','figlegend', 'fignum_exists','figtext','figure','fill','fill_between','fill_betweenx','findobj', 'flag','functools','gca','gcf','gci','get','get_backend','get_cmap', 'get_current_fig_manager','get_figlabels','get_fignums','get_plot_commands', 'get_scale_names','getp','ginput','gray','grid','hexbin','hist','hist2d','hlines', 'hot','hsv','importlib','imread','imsave','imshow','inferno','inspect', 'install_repl_displayhook','interactive','ioff','ion','isinteractive', 'jet','legend','locator_params','logging','loglog','magma','magnitude_spectrum', 'margins','matplotlib','matshow','minorticks_off','minorticks_on','mlab', 'new_figure_manager','nipy_spectral','np','overload','pause','pcolor','pcolormesh', 'phase_spectrum','pie','pink','plasma','plot','plot_date','polar','prism','psd', 'quiver','quiverkey','rc','rcParams','rcParamsDefault','rcParamsOrig','rc_context', 'rcdefaults','rcsetup','rgrids','savefig','sca','scatter','sci','semilogx', 'semilogy','set_cmap','set_loglevel','setp','show','specgram','spring','spy', 'stackplot','stairs','stem','step','streamplot','style',
+'subplot', # nrows, ncols : int, default: 1
+'subplot2grid', 'subplot_mosaic','subplot_tool','subplots','subplots_adjust','summer','suptitle', 'switch_backend','sys','table',
+	'text',# text(x: 'float', y: 'float', s: 'str', fontdict: 'dict[str, Any] | None' = None, **kwargs) -> 'Text'
+	'thetagrids','threading','tick_params', 'ticklabel_format','tight_layout','time', 'title', 'tricontour','tricontourf', 'tripcolor','triplot','twinx','twiny','uninstall_repl_displayhook','violinplot', 'viridis','vlines','waitforbuttonpress','winter','xcorr','xkcd','xlabel','xlim', 'xscale','xticks','ylabel','ylim','yscale','yticks');
 
 sub make_colormap {
 =example
@@ -60,7 +112,9 @@ my $colormap = make_colormap({
 	my $map;
 	if (defined $args->{colorbar_image_file}) {
 # https://matplotlib.org/stable/users/explain/colors/colorbar_only.html
-		my ($py, $tmp_file) = tempfile(DIR => '/tmp', SUFFIX => '.py', UNLINK => 1);
+		my $unlink = 0;
+		my ($py, $tmp_file) = tempfile(DIR => '/tmp', SUFFIX => '.py', UNLINK => $unlink);
+		say $tmp_file if $unlink == 0;
 		say $py 'import matplotlib.pyplot as plt';
 		say $py 'import matplotlib as mpl';
 		say $py 'fig, ax = plt.subplots(figsize=(6, 1), layout="constrained")';
@@ -129,6 +183,55 @@ sub function { # this is a helper function to other matplotlib subroutines
 		say {$args->{fh}} 'plt.plot(xs, ys, ' . join (',', @params) . ')';
 	} else {
 		say {$args->{fh}} 'plt.plot(xs, ys)';
+	}
+}
+
+sub plot_args { # this is a helper function to other matplotlib subroutines
+	my ($args) = @_;
+	my $current_sub = (split(/::/,(caller(0))[3]))[-1]; # https://stackoverflow.com/questions/2559792/how-can-i-get-the-name-of-the-current-subroutine-in-perl
+	unless (ref $args eq 'HASH') {
+		die "args must be given as a hash ref, e.g. \"$current_sub({ data => \@blah })\"";
+	}
+	my @reqd_args = (
+		'fh',		# e.g. $py, $fh, which will be passed by the subroutine
+		'args',	# args to original function
+	);
+	my @undef_args = grep { !defined $args->{$_}} @reqd_args;
+	if (scalar @undef_args > 0) {
+		p @undef_args;
+		die 'the above args are necessary, but were not defined.';
+	}
+	my @defined_args = ( @reqd_args,
+		@ax_methods, @fig_methods, @plt_methods
+	);
+	my @bad_args = grep { my $key = $_; not grep {$_ eq $key} @defined_args} keys %{ $args };
+	if (scalar @bad_args > 0) {
+		p @bad_args, array_max => scalar @bad_args;
+		say 'the above arguments are not recognized.';
+		p @defined_args, array_max => scalar @defined_args;
+		die 'The above args are accepted.'
+	}
+	my @args = (\@ax_methods, \@fig_methods, \@plt_methods);
+	my @obj  = ('ax', 'fig', 'plt');
+	foreach my $item (grep {defined $args->{args}{$_}} ('xlabel', 'ylabel', 'title')) {
+		if ($args->{args}{$item} =~ m/^(\w+)$/) {
+			$args->{args}{$item} = "'$args->{args}{$item}'";
+		}
+	}
+	while (my ($i, $obj) = each @args) {
+		foreach my $method (grep {defined $args->{args}{$_}} @{ $args[$i] }) {
+			my $ref = ref $args->{args}{$method};
+			if ($ref eq '') {
+				say {$args->{fh}} "$obj[$i].$method($args->{args}{$method})";
+			} elsif ($ref eq 'ARRAY') {
+				foreach my $j (@{ $args->{args}{$method} }) { # say $fh "plt.$method($plt)";
+					say {$args->{fh}} "$obj[$i].$method($j)";
+				}
+			} else {
+				p $args;
+				die "$ref only accepts scalar or array types";
+			}
+		}
 	}
 }
 
@@ -407,7 +510,7 @@ sub average_roc_plot {
 #---------
 	$args->{roc} = $args->{roc} // 1;
 	my $unlink = 1;
-	my ($fh, $filename) = tempfile (UNLINK => $unlink, SUFFIX => '.py', DIR => '/tmp');
+	my ($fh, $filename) = tempfile(UNLINK => $unlink, SUFFIX => '.py', DIR => '/tmp');
 	say $filename if $unlink == 0;
 	say $fh 'import matplotlib.pyplot as plt';
 	say $fh "import numpy as np\n";
@@ -501,43 +604,101 @@ sub average_roc_plot {
 	return $output_image
 }
 
-sub barplot {
-=data description
-	data should be entered in as a hash of arrays:
- alligators  [
-     [0]  0.775193798449612,
-     [1]  2.32266164469554,
-     [2]  2.16383307573416,
-     [3]  1.71339563862928,
- ],
- bats         [
-     [0]  1.30612244897959,
-     [1]  58.3333333333333,
-     [2]  69.2307692307692,
-     [3]  50,
-The keys (alligators, bats) indicate the group (color of the bar in a grouped bar plot)
-The x-coordinate group is indicated by @labels that's passed to this subroutine, and can repeat to show that a variable repeats so that there are error bars
-The x-coordinate groups are named by @labels:
-    [0]  "0-0.2",
-    [1]  "0.2-0.4" 
-    [2]  "0.4-0.6" 
-    [3]  "0.6-0.8"
-    [4]  "0.8-1"
-    [5]  "0-0.2",
-    [6]  "0.2-0.4"
-    [7]  "0.4-0.6",
-    [8]  "0.6-0.8",
-    [9]  "0.8-1",
-each hash-array in $args->{data} should equal the length of @labels, or the subroutine won't know which x-group to use
-The repeating data (indices 0,5,10, etc. of @labels above) will show variation and error bars
+sub barplot { # not intended for stacked plots
+=barplot({
+	'bar.type'			=> 'bar',
+#	bottom				=> \@bottom,
+	color					=> ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'fuchsia'],
+	edgecolor			=> 'black',
+	execute				=> 0,
+	'output.filename'	=> '/tmp/barplot.svg',
+	data					=> {
+		Fri	=> 76,
+		Mon	=> 73,
+		Sat	=> 26,
+		Sun	=> 11,
+		Thu	=> 94,
+		Tue	=> 93,
+		Wed	=> 77
+	},
+	'input.file'		=> $tmp_filename,
+	'key.order'			=> ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+	title					=> '"title"',
+	text					=> [
+									'1, 50, "text1"',
+									'2, 55, "text2"',
+								],
+	suptitle				=> '"suptitle2"',
+	xlabel				=> '"Day of the Week"',
+	ylabel				=> '"# of Rejections"',
+});
+barplot({
+	'bar.type'				=> 'barh',
+	data => {
+		'United States'	=> 5277, # FAS Estimate
+		'Russia'				=> 5449, # FAS Estimate
+		'United Kingdom'	=> 225,  # Consistent estimate
+		'France'				=> 290,  # Consistent estimate
+		'China'				=> 600,  # FAS Estimate
+		'India'				=> 180,  # FAS Estimate
+		'Pakistan'			=> 130,  # FAS Estimate
+		'Israel'				=> 90,   # FAS Estimate
+		'North Korea'		=> 50,   # FAS Estimate
+	},
+	'output.filename'		=> '/tmp/nuclear.warheads.svg',
+	set_figwidth			=> 13,
+	'input.file'			=> $tmp_filename,
+	xerr						=> {
+		'United States'	=> [15,29],
+		'Russia'				=> [199,1000],
+		'United Kingdom'	=> [15,19],
+		'France'				=> [19,29],
+		'China'				=> [200,159],
+		'India'				=> [15,25],
+		'Pakistan'			=> [15,49],
+		'Israel'				=> [90,50],
+		'North Korea'		=> [10,20],
+	},
+	'log'						=> 'True',
+#	linewidth				=> 1,
+});
 =cut
 	my ($args) = @_;
-	my @undef_args = grep { !defined $args->{$_}} ('data', 'filename');
+	my $current_sub = (split(/::/,(caller(0))[3]))[-1]; # https://stackoverflow.com/questions/2559792/how-can-i-get-the-name-of-the-current-subroutine-in-perl
+	unless (ref $args eq 'HASH') {
+		die "args must be given as a hash ref, e.g. \"$current_sub({ data => \@blah })\"";
+	}
+	# required arguments
+	my @reqd_args = (
+		'data',				# a simple hash, key => value
+		'output.filename'	# an output file; returns string otherwise
+	);
+	my @undef_args = grep { !defined $args->{$_}} @reqd_args;
 	if (scalar @undef_args > 0) {
 		p @undef_args;
 		die 'the above args are necessary, but were not defined.';
 	}
-	my @defined_args = ('color', 'colors', 'data', 'figwidth', 'figheight', 'filename', 'flip', 'grid', 'keys', 'labelright', 'labels', 'legend', 'logscale', 'labelsize', 'major_gridlines', 'minor_gridlines', 'output_type', 'tick_params', 'title', 'xlabel', 'yerr', 'ylabel');
+	my @defined_args = (@reqd_args, # all possible options
+		'bar.type',		# default "bar" or "barh"
+		'bottom',		# bottoms of bars; float or array-like, default: 0
+		'color',			# :mpltype:`color` or list of :mpltype:`color`, optional; The colors of the bar faces. This is an alias for *facecolor*. If both are given, *facecolor* takes precedence
+# if entering multiple colors, quoting isn't needed
+		'edgecolor',	#:mpltype:`color` or list of :mpltype:`color`, optional; The colors of the bar edges.
+		'execute',		# execute the python file or not; default 1 = yes
+		'input.file',	# instead of lots of files, run all plots together in this file
+		'key.order',	# define the keys in an order (an array reference)
+		'linewidth',	# float or array, optional; Width of the bar edge(s). If 0, don't draw edges
+		'log',			# bool, default: False; If *True*, set the y-axis to be log scale.
+		'width',			# float or array, default: 0.8; The width(s) of the bars.
+		'xerr',			# float or array-like of shape(N,) or shape(2, N), optional. If not *None*, add horizontal / vertical errorbars to the bar tips. The values are +/- sizes relative to the data:        - scalar: symmetric +/- values for all bars
+#        - shape(N,): symmetric +/- values for each bar
+#        - shape(2, N): Separate - and + values for each bar. First row
+#          contains the lower errors, the second row contains the upper
+#          errors.
+#        - *None*: No errorbar. (Default)
+		'yerr', # same as xerr, but better with bar
+		@ax_methods, @plt_methods, @fig_methods
+	);
 	my @bad_args = grep { my $key = $_; not grep {$_ eq $key} @defined_args} keys %{ $args };
 	if (scalar @bad_args > 0) {
 		p @bad_args;
@@ -545,164 +706,112 @@ The repeating data (indices 0,5,10, etc. of @labels above) will show variation a
 		p @defined_args;
 		die 'The above args are accepted.'
 	}
-	my @keys;
-	if (defined $args->{keys}) {
-# the keys argument allows me to specify the order of data keys to get colors the desired way
-		my @wrong_keys = grep { not defined $args->{data}{$_} } @{ $args->{keys} };
-		if (scalar @wrong_keys > 0) {
-			p @wrong_keys;
-			die 'the above keys were mentioned in "keys" but are not defined in "data"'
-		}
-		@keys = @{ $args->{keys} };
+	my @key_order;
+	if (defined $args->{'key.order'}) {
+		@key_order = @{ $args->{'key.order'} };
 	} else {
-		@keys = sort keys %{ $args->{data} };
+		@key_order = sort keys %{ $args->{data} };
 	}
-	if (scalar @keys == 0) {
-		die 'The data entered was empty.'
+	$args->{'bar.type'} = $args->{'bar.type'} // 'bar'; # use "bar" by default
+	if ( # xerr doesn't work with barh
+		($args->{'bar.type'} eq 'barh')
+		&&
+		(defined $args->{'xerr'})
+		&&
+		(not defined $args->{'yerr'})
+	) {
+		$args->{xerr} = $args->{yerr};
 	}
-	my $n_group = 0;
-	$n_group = scalar @{ $args->{labels} } if defined $args->{labels};
 	my $unlink = 0;
-	my ($fh, $filename) = tempfile (UNLINK => $unlink, SUFFIX => '.py');
-	say $filename if $unlink == 0;
+	my ($fh, $temp_py);
+	if (defined $args->{'input.file'}) {
+		$temp_py = $args->{'input.file'};
+		open $fh, '>>', $args->{'input.file'};
+	} else {
+		($fh, $temp_py) = tempfile(DIR => '/tmp', SUFFIX => '.py', UNLINK => $unlink);
+	}
+	say $temp_py if $unlink == 0;
 	say $fh 'import matplotlib.pyplot as plt';
-	$args->{xlabel} = $args->{xlabel} // 'xlabel';
-	$args->{yerr} = $args->{yerr} // 1; # by default, yerrors are on
-	$args->{flip} = $args->{flip} // 0; # by default, flip is off
-	
-	my $colors = '';
-	if (defined $args->{colors}) {
-		# the below code helps to provide better error messages in case I make an error in calling the sub
-		my @wrong_keys = grep { not defined $args->{colors}{$_} } keys %{ $args->{data} };
-		if (scalar @wrong_keys > 0) {
-			p @wrong_keys;
-			die 'the above data keys have no defined color'
-		}
-		$colors = ', color = ["' . join ('","', @{ $args->{colors} }{@keys} ) . '"]';
-	}
-	if ($n_group == 0) { # simple case, 1 value for each key
-		say $fh 'xnames = ["' . join ('","', @keys) . '"]';
-		say $fh 'values = [' . join (',', @{ $args->{data} }{@keys}) . ']';
-#		say $fh 'fig, ax = plt.subplots()';
-		my $plot = 'plt.bar';
-		if ($args->{flip} > 0) {
-			$plot .= 'h' if $args->{flip} > 0;
-			if (defined $args->{xlabel} && defined $args->{ylabel}) {
-				my $tmp = $args->{xlabel};
-				$args->{xlabel} = $args->{ylabel};
-				$args->{ylabel} = $tmp;
-			} elsif ((defined $args->{xlabel}) && (!defined $args->{ylabel})) {
-				$args->{ylabel} = delete $args->{xlabel};
-			} elsif ((!defined $args->{xlabel}) && (defined $args->{ylabel})) {
-				$args->{xlabel} = delete $args->{ylabel};
-			}
-		}
-		say $fh "$plot(xnames, values $colors)";
-#		say $fh 'ax.invert_xaxis()' if $args->{flip} > 0;
-	} elsif ($n_group > 0) { # more complex plots with error bars
-		say $fh 'import pandas as pd';
-		print $fh 'ix = pd.MultiIndex.from_arrays([["'  . join ('","', @{ $args->{labels} }) . '"],], ';
-		say $fh "names = ['$args->{xlabel}'])";
-		print $fh 'df = pd.DataFrame({';
-		foreach my $key (@keys) {
-			$args->{data}{$key} = [grep {defined} @{ $args->{data}{$key} }];
-			my $n = scalar @{ $args->{data}{$key} };
-			if ($n != $n_group) {
-				p $args->{data};
-				p $args->{labels};
-				die "$key should have $n_group elements but has $n elements."
-			}
-			say $fh "\t'$key': [" . join (',', @{ $args->{data}{$key} }) . '],';
-		}
-		say $fh '}, index = ix)';
-		say $fh "gp = df.groupby(level=('$args->{xlabel}'))";
-
-		say $fh 'means = gp.mean()';
-		say $fh 'errors = gp.std()';
+	say $fh 'labels = ["' . join ('","', @key_order) . '"]';
+	say $fh 'vals = [' . join (',', @{ $args->{data} }{@key_order}) . ']';
+	my $fig_present = 0;
+	if (grep {defined $args->{$_}} (@ax_methods, @fig_methods)) {
+		$fig_present = 1;
 		say $fh 'fig, ax = plt.subplots()';
-		my $plot = 'means.plot.bar';
-		if ($args->{flip} > 0) {
-			$plot .= 'h' if $args->{flip} > 0;
-			if (defined $args->{xlabel} && defined $args->{ylabel}) {
-				my $tmp = $args->{xlabel};
-				$args->{xlabel} = $args->{ylabel};
-				$args->{ylabel} = $tmp;
-			} elsif ((defined $args->{xlabel}) && (!defined $args->{ylabel})) {
-				$args->{ylabel} = delete $args->{xlabel};
-			} elsif ((!defined $args->{xlabel}) && (defined $args->{ylabel})) {
-				$args->{xlabel} = delete $args->{ylabel};
-			}
-		}
-		if ($args->{yerr} > 0) {
-			my $err = 'yerr';
-			$err = 'xerr' if $args->{flip} > 0;
-			say $fh "$plot($err=errors, ax=ax, capsize=4, rot=0 $colors)";
+	}
+	my $options = '';# these args go to the plt.bar call
+	if (defined $args->{'log'}) {
+		$options .= ", log = $args->{log}";
+	}
+	# args that can be either arrays or strings below; STRINGS:
+	foreach my $c (grep {defined $args->{$_}} ('color', 'edgecolor')) {
+		my $ref = ref $args->{$c};
+		if ($ref eq '') { # single color
+			$options .= ", $c = '$args->{$c}'";
+		} elsif ($ref eq 'ARRAY') {
+			$options .= ", $c = [\"" . join ('","', @{ $args->{$c} }) . '"]';
 		} else {
-			say $fh "$plot(ax=ax, capsize=4, rot=0 $colors)";
-		}
-		say $fh 'ax.invert_yaxis()' if $args->{flip} > 0;
-	}
-	if (defined $args->{logscale}) {
-		foreach my $axis (@{ $args->{logscale} }) { # x, y 
-			say $fh "plt.$axis" . 'scale("log")';
+			p $args;
+			die "$ref for $c isn't acceptable";
 		}
 	}
-	foreach my $arg ('figwidth', 'figheight') {
-		say $fh "fig.set_$arg($args->{$arg})" if defined $args->{$arg};
-	}
-	if (defined $args->{grid}) {
-		foreach my $axis (@{ $args->{logscale} }) { # x, y 
-			say $fh "plt.grid(axis = '$axis')";
+	# args that can be either arrays or strings below; NUMERIC:
+	foreach my $c (grep {defined $args->{$_}} ('linewidth')) {
+		my $ref = ref $args->{$c};
+		if ($ref eq '') { # single color
+			$options .= ", $c = $args->{$c}";
+		} elsif ($ref eq 'ARRAY') {
+			$options .= ", $c = [" . join (',', @{ $args->{$c} }) . ']';
+		} else {
+			p $args;
+			die "$ref for $c isn't acceptable";
 		}
 	}
-	$args->{output_type} = $args->{output_type} // 'svg';
-	$args->{flip} = $args->{flip} // 0;
-	foreach my $arg ('title', 'xlabel', 'ylabel') {
-		say $fh "plt.$arg('$args->{$arg}')" if defined $args->{$arg};
-	}
-# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.grid.html
-	say $fh "ax.grid($args->{grid})" if defined $args->{grid};
-	if (defined $args->{minor_gridlines}) {
-# https://www.tutorialspoint.com/how-to-show-minor-tick-labels-on-a-log-scale-with-matplotlib
-		say $fh 'from matplotlib.ticker import FormatStrFormatter';
-		foreach my $axis (keys %{ $args->{minor_gridlines} }) {
-			say $fh "ax.$axis" . "axis.set_minor_formatter(FormatStrFormatter('$args->{minor_gridlines}{$axis}'))";
+	foreach my $err (grep {defined $args->{$_}} ('xerr', 'yerr')) {
+		my $ref = ref $args->{$err};
+		if ($ref eq '') {
+			$options .= ", $err = $args->{$err}";
+		} elsif ($ref eq 'HASH') { # I assume that it's all defined
+			my (@low, @high);
+			foreach my $i (@key_order) {
+				if (scalar @{ $args->{$err}{$i} } != 2) {
+					p $args->{$err}{$i};
+					die "$err/$i should have exactly 2 items: low and high error bars";
+				}
+				push @low,	$args->{$err}{$i}[0];
+				push @high,	$args->{$err}{$i}[1];
+			}
+			$options .= ", $err = [[" . join (',', @low) . '],[' . join (',', @high) . ']]';
+		} else {
+			p $args;
+			die "$ref for $err isn't acceptable";
 		}
 	}
-	if (defined $args->{major_gridlines}) {
-# https://www.tutorialspoint.com/how-to-show-minor-tick-labels-on-a-log-scale-with-matplotlib
-		say $fh 'from matplotlib.ticker import FormatStrFormatter';
-		foreach my $axis (keys %{ $args->{major_gridlines} }) {
-			say $fh "ax.$axis" . "axis.set_major_formatter(FormatStrFormatter('$args->{minor_gridlines}{$axis}'))";
+	say $fh "plt.$args->{'bar.type'}(labels, vals $options)";
+	plot_args({
+		fh		=> $fh,
+		args	=> $args
+	});
+	say $fh "plt.savefig('$args->{'output.filename'}', bbox_inches = 'tight', metadata={'Creator': 'made/written by " . getcwd() . "/$RealScript called using \"$current_sub\" in " . __FILE__ . "'})";
+	$args->{execute} = $args->{execute} // 1;
+	if ($args->{execute} == 0) {
+		say $fh 'plt.close()';
+		if ($fig_present == 0) {
+			say $fh 'del labels, vals';
+		} else {
+			say $fh 'del fig, ax, labels, vals';
 		}
 	}
-	if (defined $args->{tick_params}) {
-# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tick_params.html
-		say $fh "ax.tick_params($args->{tick_params})";
-	}
-	$args->{labelright} = $args->{labelright} // 0; # by default, labels on the right side are off
-	if ($args->{labelright} > 0) {
-		say $fh 'plt.tick_params(labelright = True, right = True, axis = "both", which = "both")';
-	}
-	my $output_image = "$args->{filename}.$args->{output_type}";
-	$args->{legend} = $args->{legend} // 1;
-#	say $fh 'fig, ax = plt.subplots()' if $n_group > 0;
-	say $fh 'ax.get_legend().remove()' if $args->{legend} == 0;
-	say $fh "plt.savefig('$output_image', bbox_inches='tight', pad_inches = 0.1)";
 	close $fh;
-	
-	my ($stdout, $stderr, $exit) = capture {
-		system( "python3 $filename" );
-	};
-	if ($exit != 0) {
-		say "exit = $exit";
-		say "STDOUT = $stdout";
-		say "STDERR = $stderr";
-		die 'failed'
+	if ($args->{execute} > 0) {
+		execute("python3 $temp_py");
+		say 'wrote ' . colored(['cyan on_bright_yellow'], "$args->{'output.filename'}");
+	} else { # not running yet
+		say 'will write ' . colored(['cyan on_bright_yellow'], "$args->{'output.filename'}");
 	}
-	say "wrote $output_image";
-	return $output_image
+	return $args->{'output.filename'};
 }
+
 sub colored_table {
 =purpose
 	this subroutine prints out a colored table, kind of like a heat map
@@ -1212,8 +1321,8 @@ data should be a hash of arrays.  Density plots cannot handle multiple sets
 	my $current_sub = (split(/::/,(caller(0))[3]))[-1];
 	my ($args) = @_;
 	my @reqd_args = (
-		'filename',	# doesn't include suffix like ".svg"
-		'data'		# hash of array
+		'output.filename',	# include suffix like ".svg"
+		'data'					# hash of array
 	);
 	my @undef_args = grep { !defined $args->{$_} } @reqd_args;
 	if (scalar @undef_args > 0) {
@@ -1222,13 +1331,13 @@ data should be a hash of arrays.  Density plots cannot handle multiple sets
 	}
 	my @defined_args = ('cblabel',
 	'cb_logscale',		# put the colorbar/colors in logarithmic scale. "on" is if $args->{cb_logscale} > 0
+	'execute',			# execute the python file or not; default 1 = yes
+	'input.file',		# instead of lots of files, run all plots together in this file
 	@reqd_args, 'keys', 'legend', 'line_segment',
-	'logscale',		# an array of axes, e.g. logscale => ['x', 'y']
-	'title',
-	'xbins',			# default 15
-	'xlabel',
-	'ylabel',
-	'ybins'		# default 15
+	'logscale',			# an array of axes, e.g. logscale => ['x', 'y']
+	'xbins',				# default 15
+	'ybins',				# default 15
+	@ax_methods, @plt_methods, @fig_methods
 	);
 	my @bad_args = grep { my $key = $_; not grep {$_ eq $key} @defined_args} keys %{ $args };
 	if (scalar @bad_args > 0) {
@@ -1263,17 +1372,26 @@ data should be a hash of arrays.  Density plots cannot handle multiple sets
 		die 'The length of both keys must be equal.';
 	}
 	if (defined $args->{title}) {
-		$args->{title} .= " ($n_points points)";
+		if ($args->{title} =~ m/([\'\"])$/) {
+			my $str_terminus = $1;
+			$args->{title} =~ s/[\'\"]$//;
+			$args->{title} .= " ($n_points points)$str_terminus";
+		} else {
+			$args->{title} .= " ($n_points points)";
+		}
 	} else {
 		$args->{title} = " ($n_points points)";
 	}
 # https://izziswift.com/how-can-i-make-a-scatter-plot-colored-by-density-in-matplotlib/
 	my $unlink = 0;
-	my ($fh, $tempfile) = tempfile( UNLINK => $unlink, SUFFIX => '.py', DIR => '/tmp');
-	if ($unlink == 0) {
-		say $tempfile;
-		p $args;
+	my ($fh, $temp_py);
+	if (defined $args->{'input.file'}) {
+		$temp_py = $args->{'input.file'};
+		open $fh, '>>', $args->{'input.file'};
+	} else {
+		($fh, $temp_py) = tempfile(DIR => '/tmp', SUFFIX => '.py', UNLINK => $unlink);
 	}
+	say $temp_py if $unlink == 0;
 	say $fh 'import numpy as np';
 	say $fh 'import matplotlib.pyplot as plt';
 	say $fh 'x = np.array([' . join (',', @{ $args->{data}{$keys[0]} }) . '])';
@@ -1282,6 +1400,11 @@ data should be a hash of arrays.  Density plots cannot handle multiple sets
 		say $fh 'import numpy as np';
 		say $fh "xbins = np.logspace(np.log10(min(x)), np.log10(max(x)), $args->{nbins})";
 		$xlogscale = true;
+	}
+	my $fig_present = 0;
+	if (grep {defined $args->{$_}} (@ax_methods, @fig_methods)) {
+		$fig_present = 1;
+		say $fh 'fig, ax = plt.subplots()';
 	}
 	say $fh 'y = np.array([' . join (',', @{ $args->{data}{$keys[1]} }) . '])';
 	$args->{cb_logscale} = $args->{cb_logscale} // 0; # default is off
@@ -1293,12 +1416,16 @@ data should be a hash of arrays.  Density plots cannot handle multiple sets
 	}
 	$args->{xlabel} = $args->{xlabel} // $keys[0];
 	$args->{ylabel} = $args->{ylabel} // $keys[1];
-	foreach my $arg ('title', 'xlabel', 'ylabel') {
-		if (defined $args->{$arg}) {
-			$args->{$arg} =~ s/'/\\'/g;
-			say $fh "plt.$arg('$args->{$arg}')";
-		}
-	}
+	plot_args({
+		fh		=> $fh,
+		args	=> $args
+	});
+#	foreach my $arg ('title', 'xlabel', 'ylabel') {
+#		if (defined $args->{$arg}) {
+#			$args->{$arg} =~ s/'/\\'/g;
+#			say $fh "plt.$arg('$args->{$arg}')";
+#		}
+#	}
 	if (defined $args->{cblabel}) {
 		say $fh "plt.colorbar(label = '$args->{cblabel}')";
 	} else {
@@ -1352,23 +1479,28 @@ data should be a hash of arrays.  Density plots cannot handle multiple sets
 	} else {
 		say $fh "plt.legend($args->{legend})"; # e.g. "loc = 8" for location code https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html
 	}
-	say $fh "plt.savefig('$args->{filename}', bbox_inches = 'tight', metadata={'Creator': 'made/written by " . getcwd() . "/$RealScript called using \"$current_sub\" in " . __FILE__ . "'})";
-	close $fh;
-	my ($stdout, $stderr, $exit) = capture {
-		system( "python3 $tempfile" );
-	};
-	if ($exit != 0) {
-		say "exit = $exit";
-		say "STDOUT = $stdout";
-		say "STDERR = $stderr";
-		die "python3 failed";
+	say $fh "plt.savefig('$args->{'output.filename'}', bbox_inches = 'tight', metadata={'Creator': 'made/written by " . getcwd() . "/$RealScript called using \"$current_sub\" in " . __FILE__ . "'})";
+	$args->{execute} = $args->{execute} // 1;
+	if ($args->{execute} == 0) {
+		say $fh 'plt.close()';
+		if ($fig_present == 0) {
+			say $fh 'del x, y';
+		} else {
+			say $fh 'del fig, ax, x';
+		}
 	}
-	say 'wrote ' . colored(['white on_green'], $args->{filename});
-	return $args->{filename};
+	close $fh;
+	if ($args->{execute} > 0) {
+		execute("python3 $temp_py");
+		say 'wrote ' . colored(['cyan on_bright_green'], "$args->{'output.filename'}");
+	} else { # not running yet
+		say 'will write ' . colored(['cyan on_green'], "$args->{'output.filename'}");
+	}
+	return $args->{'output.filename'};
 }
 
 sub execute ($cmd, $return = 'exit', $die = 1) {
-	if ($return !~ m/^(exit|stdout|stderr|all)$/i) {
+	if ($return !~ m/^(exit|stdout|stderr|all)$/) {
 		die "you gave \$return = \"$return\", while this subroutine only accepts ^(exit|stdout|stderr)\$";
 	}
 	my ($stdout, $stderr, $exit) = capture {
@@ -1380,15 +1512,15 @@ sub execute ($cmd, $return = 'exit', $die = 1) {
 		say STDERR "STDERR = $stderr";
 		die "$cmd\n failed";
 	}
-	if ($return =~ m/^exit$/i) {
+	if ($return eq 'exit') {
 		return $exit
-	} elsif ($return =~ m/^stderr$/i) {
+	} elsif ($return eq 'stderr') {
 		chomp $stderr;
 		return $stderr
-	} elsif ($return =~ m/^stdout$/i) {
+	} elsif ($return eq 'stdout') {
 		chomp $stdout;
 		return $stdout
-	} elsif ($return =~ m/^all$/i) {
+	} elsif ($return eq 'all') {
 		chomp $stdout;
 		chomp $stderr;
 		return {
@@ -1614,10 +1746,6 @@ sub hist2d_in_rows {
 		'plot_params',	# array of hashes
 		'plot_type',	# an array: e.g. "hist2d", by default "plot"
 		'sharex',		# sharex according to plt.subplots, by default true
-		'subtitles',	# each of the plot's titles, lesser in significance than title
-		'title',			# this is sent to suptitle; "title" won't work here
-		'xlabel',		# overall xlabel for all plots
-		'xlim', 			# e.g. [0,1]. They're shared
 		'yaxis_off', 	# deactivate the y-axis for these groups, an array
 #		'ylabel',		# an array for each data group
 		'ylim', 			# e.g. [0,1]
@@ -1793,6 +1921,120 @@ sub hist2d_in_rows {
 	return $args->{filename};
 }
 sub histogram {
+=histogram({
+	data	=> {
+		W	=> generate_normal_dist(100, 15, 210*100),
+		B	=> generate_normal_dist(85, 15, 41*100)
+	},
+	'output.filename' => '/tmp/overlapping.histogram.svg',
+	bins	=> {
+		W	=> 100,
+		B	=> 100
+	},
+	legend	=> 'loc="upper right"',
+	title		=> '"IQ Distribution"',
+	xlabel	=> '"IQ"',
+	ylabel	=> '"# of People in the USA"'
+});
+=cut
+	my ($args) = @_;
+	my $current_sub = (split(/::/,(caller(0))[3]))[-1]; # https://stackoverflow.com/questions/2559792/how-can-i-get-the-name-of-the-current-subroutine-in-perl
+	unless (ref $args eq 'HASH') {
+		die "args must be given as a hash ref, e.g. \"$current_sub({ data => \@blah })\"";
+	}
+	my @reqd_args = (
+		'data',					# hash of arrays
+		'output.filename',	# output, "file.svg" or whatever; otherwise file returns string
+	);
+	my @undef_args = grep { !defined $args->{$_}} @reqd_args;
+	if (scalar @undef_args > 0) {
+		p @undef_args;
+		die 'the above args are necessary, but were not defined.';
+	}
+	my @defined_args = (
+		'bins',					# a hash for each group in data
+		'execute',		# execute the python file or not; default 1 = yes
+		'input.file',		# instead of lots of files, run all plots together in this file
+		@ax_methods, @plt_methods,	@fig_methods,
+	@reqd_args);
+	my @bad_args = grep { my $key = $_; not grep {$_ eq $key} @defined_args} keys %{ $args };
+	if (scalar @bad_args > 0) {
+		p @bad_args;
+		say 'the above arguments are not recognized.';
+		p @defined_args;
+		die 'The above args are accepted.'
+	}
+	my $data_ref = ref $args->{data};
+	unless ($data_ref eq 'HASH') {
+		die "$current_sub data should be a HASH, but $data_ref was entered";
+	}
+	my $unlink = 0;
+	my ($fh, $temp_py);
+	if (defined $args->{'input.file'}) {
+		$temp_py = $args->{'input.file'};
+		open $fh, '>>', $args->{'input.file'};
+	} else {
+		($fh, $temp_py) = tempfile(DIR => '/tmp', SUFFIX => '.py', UNLINK => $unlink);
+	}
+	say $temp_py if $unlink == 0;
+	say $fh 'import matplotlib.pyplot as plt';
+	say $fh 'plt.figure()';
+	my ($ax_present, $fig_present) = (0,0);
+	if (grep {defined $args->{$_}} (@ax_methods, @fig_methods)) {
+		$fig_present = 1;
+		say $fh 'fig, ax = plt.subplots()';
+	}
+	foreach my $set (sort keys %{ $args->{data} }) {
+		my $bins = '';
+		if (defined $args->{bins}{$set}) {
+			$bins = ", bins = $args->{bins}{$set}";
+		}
+		say $fh 'plt.hist([' . join (',', @{ $args->{data}{$set} }) . "] $bins, alpha = 0.5, label = '$set')";
+	}
+	foreach my $method (grep {defined $args->{$_}} @ax_methods) {
+		my $ref = ref $args->{$method};
+		if ($ref eq '') {
+			say $fh "ax.$method($args->{$method})";
+		} elsif ($ref eq 'ARRAY') {
+			foreach my $ax (@{ $args->{$method} }) {
+				say $fh "ax.$method($ax)";
+			}
+		} else {
+			p $args;
+			die "$ref only accepts scalar or array types";
+		}
+	}
+	foreach my $method (grep {defined $args->{$_}} @plt_methods) {
+		my $ref = ref $args->{$method};
+		if ($ref eq '') {
+			say $fh "plt.$method($args->{$method})";
+		} elsif ($ref eq 'ARRAY') {
+			foreach my $plt (@{ $args->{$method} }) {
+				say $fh "plt.$method($plt)";
+			}
+		} else {
+			p $args;
+			die "$ref only accepts scalar or array types";
+		}
+	}
+	say $fh "plt.savefig('$args->{'output.filename'}', bbox_inches = 'tight', metadata={'Creator': 'made/written by " . getcwd() . "/$RealScript called using \"$current_sub\" in " . __FILE__ . "'})";
+	$args->{execute} = $args->{execute} // 1;
+	if ($args->{execute} == 0) {
+		if ($fig_present == 0) {
+			say $fh 'del labels, vals';
+		} else {
+			say $fh 'del fig, ax, labels, vals';
+		}
+	}
+	close $fh;
+	if ($args->{execute} > 0) {
+		execute("python3 $temp_py");
+		say 'wrote ' . colored(['cyan on_bright_yellow'], "$args->{'output.filename'}");
+	} else { # not running yet
+		say 'will write ' . colored(['cyan on_bright_yellow'], "$args->{'output.filename'}");
+	}
+}
+#sub histogram {
 =example
 	histogram({
 		plt_methods => {
@@ -1807,7 +2049,7 @@ sub histogram {
 		nbins		=> 60,
 	#	xlim		=> [-0.01,0.12]
 	});
-=cut
+#=cut
 	my $current_sub = (split(/::/,(caller(0))[3]))[-1]; # https://stackoverflow.com/questions/2559792/how-can-i-get-the-name-of-the-current-subroutine-in-perl
 	my ($args) = @_;
 	my @reqd_args = (
@@ -1838,7 +2080,6 @@ sub histogram {
 			die 'logscale should be an array of axes like ["x", "y"]' # this error message is more meaningful
 		}
 	}
-	
 #---------
 	my $unlink = 1;
 	my ($fh, $filename) = tempfile (UNLINK => $unlink, SUFFIX => '.py', DIR => '/tmp');
@@ -1846,7 +2087,6 @@ sub histogram {
 	say $fh 'import matplotlib.pyplot as plt';
 	say $fh 'from matplotlib.ticker import PercentFormatter';
 	$args->{nbins} = $args->{nbins} // 20;
- 
 # Creating histogram
 	say $fh 'x = [' . join (',', @{ $args->{data} }) . ']';
 	$args->{figheight} = $args->{figheight} // 6.4;
@@ -1906,6 +2146,7 @@ sub histogram {
 	say 'wrote ' . colored(['black on_bright_red'], $args->{filename});
 	return $args->{filename}
 }
+=cut
 =example histogram
 my @x;
 foreach (0..99) {
@@ -2688,15 +2929,24 @@ sub random_value ($hash) {
 		return $value
 	}
 }
-sub read_table { # mimics R's read.table
+sub read_table { # mimics R's read.table; returns array of hash
 	my ($args) = @_;
-	my @req_args = ('filename', 'row name');
+	my $args_ref = ref $args;
+	my $current_sub = (split(/::/,(caller(0))[3]))[-1]; # https://stackoverflow.com/questions/2559792/how-can-i-get-the-name-of-the-current-subroutine-in-perl
+	unless ($args_ref eq 'HASH') {
+		die "\"$args_ref\" was entered, but a \"HASH\" is needed by $current_sub";
+	}
+	my @req_args = ('filename');#, 'row name');
 	my @undef_args = grep { !defined $args->{$_}} @req_args;
 	if (scalar @undef_args > 0) {
 		p @undef_args;
 		die 'the above args are necessary, but were not defined.';
 	}
-	my @defined_args = (@req_args, 'sep', 'substitutions');
+	my @defined_args = (@req_args,
+	'sep', # by default ","
+	'substitutions',
+	'output.type'
+	);
 	my @bad_args = grep { # which args aren't defined?
 								my $key = $_;
 								not grep {$_ eq $key} @defined_args
@@ -2708,7 +2958,8 @@ sub read_table { # mimics R's read.table
 		die 'The above args are accepted.'
 	}
 	$args->{sep} = $args->{sep} // ',';
-	my (%data, @header);
+	$args->{'output.type'} = $args->{'output.type'} // 'aoh';
+	my (@data, @header, %data);
 	open my $txt, '<', $args->{filename};
 	while (<$txt>) {
 		chomp;
@@ -2718,20 +2969,37 @@ sub read_table { # mimics R's read.table
 		}
 		my @line = split /$args->{sep}/;
 		if ($. == 1) { # header
-			if ((defined $args->{'row name'}) && (!grep { $_ eq $args->{'row name'}} @line)) {
-				p @line;
-				die "the above line is missing $args->{'row name'}"
+#			if ((defined $args->{'row name'}) && (!grep { $_ eq $args->{'row name'}} @line)) {
+#				p @line;
+#				die "the above line is missing $args->{'row name'}"
+#			}
+			foreach my $cell (@line) {
+				$cell =~ s/^#//;
+				if ($cell =~ m/^"(.+)"$/) { # remove quotes
+					$cell = $1;
+				}
 			}
 			@header = @line;
-			next
+			next;
 		}
 		my %line;
 		@line{@header} = @line; # hash slice based on header
-		my $key = $line{$args->{'row name'}};
-		delete $line{$args->{'row name'}};
-		$data{$key} = \%line;
+		if ($args->{'output.type'} eq 'aoh') {
+			push @data, \%line;
+		} elsif ($args->{'output.type'} eq 'hoa') {
+			foreach my $col (@header) {
+				push @{ $data{$col} }, $line{$col};
+			}
+		}
+#		my $key = $line{$args->{'row name'}};
+#		delete $line{$args->{'row name'}};
+#		$data{$key} = \%line;
 	}
-	\%data
+	if ($args->{'output.type'} eq 'aoh') {
+		return \@data;
+	} elsif ($args->{'output.type'} eq 'hoa') {
+		return \%data;
+	}
 }
 
 sub ref_to_json_file ($ref, $json_filename) {
@@ -3921,6 +4189,18 @@ violin_subplots({
 	},
 	flip			=> 1,
 });
+violin_subplots({
+	data	=> [
+		{
+			White	=> generate_normal_dist(100, 15, 210*100),
+			Black	=> generate_normal_dist(85, 15, 41*100)
+		},
+	],
+	ncols		=> 1,
+	nrows		=> 1,
+	flip		=> 1,
+	filename	=> '/tmp/violin.subplot.svg'
+});
 =cut
 	my ($args) = @_;
 	my $current_sub = (split(/::/,(caller(0))[3]))[-1]; # https://stackoverflow.com/questions/2559792/how-can-i-get-the-name-of-the-current-subroutine-in-perl
@@ -4005,6 +4285,10 @@ violin_subplots({
 		my $min_n_points = 'inf';
 		my @xticks;
 		foreach my $set (sort keys %{ $plot }) { # each individual violin point
+			my $ref = ref $plot->{$set};
+			unless ($ref eq 'ARRAY') {
+				die "$set must be an array, but a $ref was entered.";
+			}
 			say $py 'd.append([' . join (',', @{ $plot->{$set} }) . '])';
 			my $n_points = scalar @{ $plot->{$set} };
 			$min_n_points = min( $n_points , $min_n_points);
@@ -4156,7 +4440,6 @@ wide_plot({
 		my $color = $args->{color}{$group} // 'b';
 		say $fh 'ys = []';
 		my ($min_x, $max_x) = ('inf', '-inf');
-		my ($min_y, $max_y) = ('inf', '-inf');
 		foreach my $run (0.. scalar @{ $args->{data}{$group} }-1) {
 			$min_x = min($min_x, @{ $args->{data}{$group}[$run][0] });
 			$max_x = max($max_x, @{ $args->{data}{$group}[$run][0] });
