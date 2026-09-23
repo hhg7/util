@@ -1,0 +1,32 @@
+#!/usr/bin/env perl
+# random_key() / random_value(): return *some* key/value from a hashref.
+# (Despite the name these are not randomized; they return the first pair
+# hash iteration yields. The tests only assert membership.)
+use 5.044;
+use warnings FATAL => 'all';
+use FindBin;
+use lib "$FindBin::Bin/..";
+use Test::More;
+use Util;
+
+my %h = ( a => 1, b => 2, c => 3 );
+
+my $k = random_key(\%h);
+ok( exists $h{$k}, "random_key returned a real key ($k)" );
+
+my $v = random_value(\%h);
+ok( (grep { $_ == $v } values %h), "random_value returned a real value ($v)" );
+
+# Single-element hash: the answer is deterministic.
+my %one = ( only => 'val' );
+is( random_key(\%one),   'only', 'random_key on a 1-element hash' );
+is( random_value(\%one), 'val',  'random_value on a 1-element hash' );
+
+# Empty hash: nothing to return.
+# scalar() forces scalar context: these subs fall off the end returning an
+# empty list, which is undef in scalar context.
+my %empty;
+is( scalar random_key(\%empty),   undef, 'random_key on empty hash is undef' );
+is( scalar random_value(\%empty), undef, 'random_value on empty hash is undef' );
+
+done_testing;
