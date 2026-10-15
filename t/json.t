@@ -2,16 +2,15 @@
 # json_file_to_ref() / ref_to_json_file(): JSON round-trip, plus the
 # NaN/Infinity -> null rewrite that json_file_to_ref performs for
 # Python/NumPy-emitted files.
-use 5.044;
+require 5.010001;
+use strict;
 use warnings FATAL => 'all';
-use FindBin;
-use lib "$FindBin::Bin/..";
 use Test::More;
 use Test::Exception;
 use Capture::Tiny 'capture';
 use File::Temp qw(tempfile tempdir);
 use File::Spec;
-use Util;
+use Util::Con;
 
 my $dir = tempdir( CLEANUP => 1 );
 
@@ -42,6 +41,19 @@ ok( !defined $ref->{b}[1], 'bare Infinity becomes undef' );
 ok( !defined $ref->{b}[2], 'bare -Infinity becomes undef' );
 is( "$ref->{c}", 'NaN in string',
 	'the literal text "NaN" inside a string is NOT rewritten' );
+
+# Inside a string, NaN after '[', ',' or ':' looks like a value to a pattern
+# that does not know where strings begin and end; these used to be rewritten.
+my $instr = File::Spec->catfile($dir, 'instr.json');
+open my $ifh, '>', $instr or die $!;
+print $ifh '{"msg": "values: [1, NaN, 2]", "esc": "q\\": NaN}", "x": [1, NaN], "k:NaN,": -Infinity}';
+close $ifh;
+$ref = json_file_to_ref($instr);
+is( $ref->{msg}, 'values: [1, NaN, 2]', 'NaN in value position inside a string is left alone' );
+is( $ref->{esc}, 'q": NaN}', 'an escaped quote does not end the string early' );
+ok( !defined $ref->{x}[1], 'a bare NaN after the strings is still rewritten' );
+ok( exists $ref->{'k:NaN,'} && !defined $ref->{'k:NaN,'},
+	'a key holding ":NaN," is left alone, and its -Infinity value is rewritten' );
 
 # --- error handling ---
 throws_ok { json_file_to_ref(File::Spec->catfile($dir, 'missing.json')) }

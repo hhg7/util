@@ -1,11 +1,10 @@
 #!/usr/bin/env perl
 # format_commas: thousands separators + a formatted fractional part.
-use 5.044;
+require 5.010001;
+use strict;
 use warnings FATAL => 'all';
-use FindBin;
-use lib "$FindBin::Bin/..";
 use Test::More;
-use Util;
+use Util::Con;
 
 # Default format is '.%02d' (two-decimal-ish fractional suffix).
 is( format_commas(1234567.89), '1,234,567.89', 'seven-digit number with cents' );
@@ -30,6 +29,16 @@ is( format_commas(99.999),     '100.00',       'carry that widens the integer pa
 is( format_commas(0.995),      '1.00',         'exactly .995 rounds up and carries' );
 is( format_commas(999999.999, '%.0u'), '1,000,000',
 	'carry also works in integer format' );
+
+# --- '%.0u' rounds a fraction to a whole number. ---
+# --- It used to splice the hundredths on: 1234.56 came out "1,23456". ---
+is( format_commas(1234.56, '%.0u'), '1,235',     'integer format rounds up' );
+is( format_commas(1234.49, '%.0u'), '1,234',     'integer format rounds down' );
+is( format_commas(1234.5,  '%.0u'), '1,235',     'integer format rounds half up' );
+is( format_commas(0.4,     '%.0u'), '0',         'a fraction below one half is 0, not "040"' );
+is( format_commas(999.5,   '%.0u'), '1,000',     'rounding that widens the integer part' );
+is( format_commas(-1234.5, '%.0u'), '-1,235',    'negative fraction in integer format' );
+is( format_commas(-0.4,    '%.0u'), '0',         'rounds to zero in integer format, so no sign' );
 
 # --- Negative numbers: the sign is split off and the magnitude formatted. ---
 # --- These used to emit "-1,234.-49" and lose the sign entirely on -0.5.  ---

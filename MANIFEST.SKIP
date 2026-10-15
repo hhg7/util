@@ -1,0 +1,30 @@
+# Makemaker generated files and build artifacts
+^Makefile$
+^Makefile\.old$
+^blib/
+^pm_to_blib$
+^blibdirs$
+^MYMETA\.
+^MANIFEST\.bak$
+
+# Release archives and unpacked distribution directories
+^Util-Con-.*\.tar\.gz$
+^Util-Con-[\d\.]+/?$
+
+# The compatibility shim for "use Util" and the code retired from it
+^Util\.pm$
+^old\.util\.pm$
+
+# Scratch files for the author's scripts
+^donate\.file\.txt$
+^receiving\.file\.txt$
+
+# Local development and helper scripts (Ignores all .pl EXCEPT Makefile.PL)
+^(?!Makefile\.PL$).*\.pl$
+^dzil\.sh$
+^CLAUDE\.md$
+^\.claude/
+
+# Version control (Standard best practice)
+^\.git/
+^\.gitignore$

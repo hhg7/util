@@ -1,15 +1,14 @@
 #!/usr/bin/env perl
 # dir(): filtered directory listing with -X file tests, regex, recursion,
 # an optional streaming callback, and a forked recursive walk (cpu => N).
-use 5.044;
+require 5.010001;
+use strict;
 use warnings FATAL => 'all';
-use FindBin;
-use lib "$FindBin::Bin/..";
 use Test::More;
 use Test::Exception;
 use File::Temp qw(tempdir);
 use File::Spec;
-use Util;
+use Util::Con;
 
 # Build an isolated tree so results don't depend on the checkout's contents.
 my $root = tempdir( CLEANUP => 1 );
@@ -62,6 +61,8 @@ is( scalar @collected, 2, 'on_match received both top-level .txt files' );
 
 # --- "/" does not become "//" ---
 ok( !(grep { m{\A//} } dir(dir => '/', tests => 'd')), 'dir => "/" yields "/x", not "//x"' );
+# "///" used to be left as it was, and joined as "////x".
+ok( !(grep { m{\A//} } dir(dir => '///', tests => 'd')), 'dir => "///" yields "/x", not "////x"' );
 
 # --- cpu => N: forked recursive walk ---
 # dir() walks breadth-first in the parent until a level holds cpu * 4
@@ -76,7 +77,10 @@ for my $i (1 .. 12) {
 		close $fh;
 	}
 }
-symlink "$wide/d1", "$wide/link_to_d1" or die "symlink: $!";
+# symlink() dies where it is unimplemented and, on Windows, fails for a user
+# without the privilege to create one, so the check that needs it is skipped
+# there rather than failed.
+my $have_symlink = eval { symlink "$wide/d1", "$wide/link_to_d1" };
 
 for my $case (
 	[ 'default tests'   => () ],
@@ -91,8 +95,30 @@ for my $case (
 }
 is( scalar(dir(dir => $wide, recursive => 1, cpu => 2, regex => '\.txt$')), 24,
 	'cpu => 2 finds every .txt at both depths' );
-ok( !(grep { m{link_to_d1/} } dir(dir => $wide, recursive => 1, cpu => 2, tests => '')),
-	'cpu => 2 does not descend through a symlinked directory' );
+SKIP: {
+	skip 'symlink() is not available here', 1 unless $have_symlink;
+	ok( !(grep { m{link_to_d1/} } dir(dir => $wide, recursive => 1, cpu => 2, tests => '')),
+		'cpu => 2 does not descend through a symlinked directory' );
+}
+
+# A dir that is itself a symlink to a directory is listed through the link in
+# every mode.  The serial recursive walk used to find nothing, because
+# File::Find took the link for a file, while the other two followed it.
+{
+	my $links = tempdir( CLEANUP => 1 );
+	my $link  = File::Spec->catdir($links, 'wide');
+	SKIP: {
+		skip 'symlink() is not available here', 5 unless eval { symlink $wide, $link };
+		is( scalar(dir(dir => $link, regex => '^d\d+\z', tests => 'd')), 12,
+			'non-recursive dir lists through a symlinked root' );
+		my @serial   = sort(dir(dir => $link, recursive => 1));
+		my @parallel = sort(dir(dir => $link, recursive => 1, cpu => 2));
+		is( scalar @serial, 36, 'serial recursive dir walks a symlinked root' );
+		is_deeply( \@parallel, \@serial, 'cpu => 2 matches serial under a symlinked root' );
+		ok( !(grep { index($_, "$link/") != 0 } @serial), 'paths are reported under the link, not its target' );
+		is( scalar(dir(dir => "$link/", recursive => 1)), 36, 'a trailing slash on the link makes no difference' );
+	}
+}
 
 # on_match runs in the parent, so a closure over a lexical still works.
 my %seen;
@@ -124,13 +150,14 @@ throws_ok { dir(dir => $root, tests => 'Z') }
 	qr/Unrecognized characters in tests/, 'rejects invalid test chars';
 throws_ok { dir(dir => $root, regex => '(') }
 	qr/Invalid regex/, 'rejects an uncompilable regex';
-# The alternation is historical: Util.pm used to `use autodie`, which
-# intercepted opendir and threw "Can't opendir(...)" before the module's own
-# `or die "Cannot open directory"` could run. autodie is gone now (it cost
-# ~15 ms of startup and is a compile-time pragma, so it could not be made
-# lazy), so this always takes the second branch -- but matching either keeps
-# the test honest about what it actually cares about: that dir() dies.
-throws_ok { dir(dir => '/no/such/path/here', regex => '.') }
+# The alternation is historical: Util.pm, which this module was before it was
+# Util::Con, used to `use autodie`, which intercepted opendir and threw "Can't
+# opendir(...)" before the module's own `or die "Cannot open directory"` could
+# run. autodie is gone now (it cost ~15 ms of startup and is a compile-time
+# pragma, so it could not be made lazy), so this always takes the second
+# branch -- but matching either keeps the test honest about what it actually
+# cares about: that dir() dies.
+throws_ok { dir(dir => File::Spec->catdir($root, 'no', 'such', 'dir'), regex => '.') }
 	qr/(opendir|Cannot open directory)/, 'dies on a missing directory';
 
 done_testing;
