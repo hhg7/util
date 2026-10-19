@@ -22,8 +22,8 @@ my $policy = Software::Security::Policy::Individual->new({
 	# The author, as dist.ini spells it.  There is one maintainer, so there
 	# is nothing to disambiguate and no alias to forward.
 	maintainer  => 'David E. Condon <dec986@gmail.com>',
-	program     => 'Util::Con',
-	Program     => 'Util::Con',
+	program     => 'Cn::Util',
+	Program     => 'Cn::Util',
 	# Time to a first reply, not to a fix.  7 days rather than the module's
 	# 5-day default because this is a one-maintainer distribution with no CI
 	# and no co-maintainer to cover a week away.
@@ -32,7 +32,7 @@ my $policy = Software::Security::Policy::Individual->new({
 	# tarball can find the current policy.
 	git_url     => 'https://github.com/hhg7/util',
 	url         => 'https://github.com/hhg7/util/blob/main/SECURITY.md',
-	# The module's own floor: lib/Util/Con.pm says "require 5.010001", and
+	# The module's own floor: lib/Cn/Util.pm says "require 5.010001", and
 	# t/ passes there.  Raising it is a breaking change, so it is stated
 	# rather than left to a rolling window.
 	minimum_perl_version => '5.10.1',

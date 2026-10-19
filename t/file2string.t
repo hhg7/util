@@ -7,7 +7,7 @@ use Test::More;
 use Test::Exception;
 use File::Spec;
 use File::Temp qw(tempfile tempdir);
-use Util::Con;
+use Cn::Util;
 
 my ($fh, $path) = tempfile( UNLINK => 1 );
 print $fh "line1\nline2\nno-final-newline-either";

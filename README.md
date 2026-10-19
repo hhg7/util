@@ -1,10 +1,10 @@
 # NAME
 
-Util::Con - Small everyday helpers: directory listing, shell commands, JSON files, number formatting, and data-structure shapes
+Cn::Util - Small everyday helpers: directory listing, shell commands, JSON files, number formatting, and data-structure shapes
 
 # Synopsis
 
-    use Util::Con;
+    use Cn::Util;
 
     my @scripts = dir(dir => '.', regex => '\.pl$', recursive => 1);
     my $branch  = execute('git rev-parse --abbrev-ref HEAD', 'stdout');
@@ -19,19 +19,19 @@ Util::Con - Small everyday helpers: directory listing, shell commands, JSON file
 
 # Description
 
-`Util::Con` is a collection of the functions I reach for in nearly every script: listing a directory with file tests and a regex, running a shell command and keeping its output, slurping a file, reading and writing JSON, putting commas in a number, and seeing the *shape* of a large data structure without scrolling through every value in it.
+`Cn::Util` is a collection of the functions I reach for in nearly every script: listing a directory with file tests and a regex, running a shell command and keeping its output, slurping a file, reading and writing JSON, putting commas in a number, and seeing the *shape* of a large data structure without scrolling through every value in it.
 
 Loading it is meant to be cheap.  Everything that is not needed to compile the caller is loaded the first time a function needs it, so a script that only calls `format_commas` does not pay for `JSON::MaybeXS`, `Capture::Tiny` or `Data::Printer`.
 
-## What `use Util::Con` does
+## What `use Cn::Util` does
 
-Besides exporting the ten functions below, `use Util::Con` does three things to the file and package that loads it:
+Besides exporting the ten functions below, `use Cn::Util` does three things to the file and package that loads it:
 
 * It turns on `autodie ':default'` in that file, from the `use` line onward, so a bare `open` or `close` that fails dies with a message rather than returning false.
 * It gives that package `p` and `np` from `Data::Printer` (`DDP`).  They are stubs until first called, so `DDP` is loaded only by a script that prints something.  A `p` or `np` the package already has, such as one from an earlier `use DDP`, is left alone.
 * It loads `Devel::Confess`, which is process-wide: every `die` and `warn` in the program carries a stack trace.
 
-`use Util::Con ();` imports nothing and skips the first two; `Devel::Confess` is still loaded.  `use Util::Con 'format_commas';` imports only the names given, and still does all three.
+`use Cn::Util ();` imports nothing and skips the first two; `Devel::Confess` is still loaded.  `use Cn::Util 'format_commas';` imports only the names given, and still does all three.
 
 # Functions
 
@@ -159,7 +159,7 @@ It takes these options after the reference:
 
 # Installation
 
-    cpanm Util::Con
+    cpanm Cn::Util
 
 or, from a copy of the repository:
 
@@ -170,7 +170,7 @@ or, from a copy of the repository:
 
 # Compatibility
 
-`Util::Con` runs on perl 5.10.1 and later, and is tested there.  `execute` hands its command to the shell, so the command has to be written for the shell of the system it runs on.  On Windows, the paths `dir` returns are joined with `/`, which perl accepts there; recursive listings with `cpu` rely on `Parallel::ForkManager`'s emulated `fork`.
+`Cn::Util` runs on perl 5.10.1 and later, and is tested there.  `execute` hands its command to the shell, so the command has to be written for the shell of the system it runs on.  On Windows, the paths `dir` returns are joined with `/`, which perl accepts there, and a `\` in the `dir` argument is returned as `/`, so `dir => q{C:\Temp}` lists `C:/Temp/a.txt`; recursive listings with `cpu` rely on `Parallel::ForkManager`'s emulated `fork`.
 
 # Author
 

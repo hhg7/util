@@ -10,7 +10,7 @@ use Test::Exception;
 use Capture::Tiny 'capture';
 use File::Temp qw(tempfile tempdir);
 use File::Spec;
-use Util::Con;
+use Cn::Util;
 
 my $dir = tempdir( CLEANUP => 1 );
 

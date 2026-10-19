@@ -1,11 +1,11 @@
-# Security Policy for the Util::Con distribution.
+# Security Policy for the Cn::Util distribution.
 
 Report security issues by email to David E. Condon <dec986@gmail.com>.
 
-This is the Security Policy for Util::Con.
+This is the Security Policy for Cn::Util.
 
 The latest version of the Security Policy can be found in the
-[git repository for Util::Con](https://github.com/hhg7/util).
+[git repository for Cn::Util](https://github.com/hhg7/util).
 
 This text is based on the CPAN Security Group's Guidelines for Adding
 a Security Policy to Perl Distributions (version 1.3.0)
@@ -13,7 +13,7 @@ https://security.metacpan.org/docs/guides/security-policy-for-authors.html
 
 # How to Report a Security Vulnerability
 
-Security vulnerabilities can be reported to the current Util::Con
+Security vulnerabilities can be reported to the current Cn::Util
 maintainers by email to David E. Condon <dec986@gmail.com>.
 
 Please include as many details as possible, including code samples
@@ -59,10 +59,10 @@ They may also forward this issue to CPANSec.
 
 # Which Software This Policy Applies To
 
-Any security vulnerabilities in Util::Con are covered by this policy.
+Any security vulnerabilities in Cn::Util are covered by this policy.
 
 Security vulnerabilities in versions of any libraries that are
-included in Util::Con are also covered by this policy.
+included in Cn::Util are also covered by this policy.
 
 Security vulnerabilities are considered anything that allows users
 to execute unauthorised code, access unauthorised resources, or to
@@ -70,27 +70,27 @@ have an adverse impact on accessibility or performance of a system.
 
 Security vulnerabilities in upstream software (prerequisite modules
 or system libraries, or in Perl), are not covered by this policy
-unless they affect Util::Con, or Util::Con can
+unless they affect Cn::Util, or Cn::Util can
 be used to exploit vulnerabilities in them.
 
 Security vulnerabilities in downstream software (any software that
-uses Util::Con, or plugins to it that are not included with the
-Util::Con distribution) are not covered by this policy.
+uses Cn::Util, or plugins to it that are not included with the
+Cn::Util distribution) are not covered by this policy.
 
-## Supported Versions of Util::Con
+## Supported Versions of Cn::Util
 
 The maintainer(s) will only commit to releasing security fixes for
-the latest version of Util::Con.
+the latest version of Cn::Util.
 
-Note that the Util::Con project only supports major versions of Perl since
-5.10.1, even though Util::Con will run on
+Note that the Cn::Util project only supports major versions of Perl since
+5.10.1, even though Cn::Util will run on
 older versions of Perl. If a security fix requires us to increase
 the minimum version of Perl that is supported, then we may do so.
 
 # Installation and Usage Issues
 
 The distribution metadata specifies minimum versions of
-prerequisites that are required for Util::Con to work.  However, some
+prerequisites that are required for Cn::Util to work.  However, some
 of these prerequisites may have security vulnerabilities, and you
 should ensure that you are using up-to-date versions of these
 prerequisites.

@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# Regenerate the POD at the end of lib/Util/Con.pm from README.md, then check
+# Regenerate the POD at the end of lib/Cn/Util.pm from README.md, then check
 # that POD and the Changes file.  Run from the root of the repository, before
 # anything is built (dzil.sh does this first):
 #
@@ -151,7 +151,7 @@ my @idx = grep {$md[$_] =~ m/\|.+\|/} 0..$#md; # indices with tables
 my @table_end = grep {
 	($idx[$_+1] - $idx[$_]) > 1
 	} 0..$#idx-1; # get table ends
-# README.md need not have a table at all: Util-Con's has none, because a table
+# README.md need not have a table at all: Cn-Util's has none, because a table
 # reaches the POD only as "=for html" and so vanishes from perldoc in a
 # terminal.  With none, there is nothing to start or end.
 my @table_start = @idx ? (0, map {$_ + 1} @table_end) : ();
@@ -219,7 +219,7 @@ while ($over_depth > 0) { # close out any block that the wrapping above opened
 }
 @pod = @fixed_pod;
 
-my $lib = file2string('lib/Util/Con.pm');
+my $lib = file2string('lib/Cn/Util.pm');
 my @lib = split /\n/, $lib;
 my $line = first_index {$_ eq '# from md2pod.pl πατερ ημων ο εν τοις ουρανοις, ἁγιασθήτω τὸ ὄνομά σου'} @lib;
 if ($line == -1) {
@@ -228,14 +228,14 @@ if ($line == -1) {
 # Keep everything up to and including the marker line, and drop what follows.
 # Matplotlib-Simple's copy spliced at the negative offset 1-(@lib - $line),
 # which is 0 -- everything -- when the marker is the last line, as it is
-# before the first run; that run emptied lib/Util/Con.pm of its code.
+# before the first run; that run emptied lib/Cn/Util.pm of its code.
 splice @lib, $line + 1;
 push @lib, @pod; # add properly formatted POD text
-open my $fh, '>', 'lib/Util/Con.pm';
+open my $fh, '>', 'lib/Cn/Util.pm';
 say $fh join ("\n", @lib);
 close $fh;
 
-pod_file_ok( 'lib/Util/Con.pm' );
+pod_file_ok( 'lib/Cn/Util.pm' );
 
 changes_file_ok('Changes'); # hand-maintained; never generated from README.md
 done_testing();

@@ -13,7 +13,7 @@ use warnings FATAL => 'all';
 use Test::More;
 use Test::Exception;
 use Capture::Tiny 'capture';
-use Util::Con;
+use Cn::Util;
 
 sub perl_cmd {
 	my ($program) = @_;

@@ -1,10 +1,11 @@
-# Util::Con
+# Cn::Util
 
 A grab-bag of helpers the author uses in nearly every script -- `dir`,
 `execute`, `file2string`, `format_commas`, `json_file_to_ref`,
 `ref_to_json_file`, `random_key`, `random_value`, `structure` and `st` -- and,
 through `import`, `autodie`, `p`/`np` and `Devel::Confess` for the caller. It
-was `Util.pm` until 0.01, and is now a CPAN distribution.
+was `Util.pm` until 0.01, `Util::Con` for 0.01 and 0.02, `Util::Cn` for
+0.021, and is now the CPAN distribution `Cn-Util`.
 
 The global `~/.claude/CLAUDE.md` comment doctrine applies here in full. Perl
 source is indented with tabs. `~/Scripts/stats/CLAUDE.md` and
@@ -13,7 +14,7 @@ follows; where this file is silent, theirs apply.
 
 ## Back-compatible to perl 5.10.1
 
-`dist.ini` declares `perl = 5.010001` and `lib/Util/Con.pm` says
+`dist.ini` declares `perl = 5.010001` and `lib/Cn/Util.pm` says
 `require 5.010001`. 5.10.1 rather than 5.10.0 because `import` hands the
 caller `autodie`, which is core from 5.10.1.
 
@@ -63,15 +64,19 @@ Strawberry Perl, and there is no Windows machine here.
   the autodie check in `t/00-load.t` does.
 - `symlink` is unavailable or unprivileged on Windows, so a test that needs
   one skips when it cannot make one.
+- No file, directory or package segment may be a Windows device name (`CON`,
+  `PRN`, `AUX`, `NUL`, `COM0`-`COM9`, `LPT0`-`LPT9`, in any case, with or
+  without an extension). The distribution was `Util-Con` for 0.01 and 0.02,
+  and could not be built on Windows at all; `t/windows-names.t` checks it.
 
 ## `Util.pm` in the root is a shim, not the module
 
 `~/perl5/perlbrew/perls/perl-5.44.0/lib/site_perl/5.44.0/x86_64-linux/Util.pm`
 is a symlink to the root `Util.pm`, and about 55 scripts under `~/Scripts` say
-`use Util`. The root `Util.pm` loads `lib/Util/Con.pm` (resolving the symlink
+`use Util`. The root `Util.pm` loads `lib/Cn/Util.pm` (resolving the symlink
 with `abs_path`) and `goto`s its `import`, so those scripts keep working.
 It is not shipped: `dist.ini`'s `[PruneFiles]` whitelist and `MANIFEST.SKIP`
-both keep it out. Edit `lib/Util/Con.pm`, never the shim, and do not delete
+both keep it out. Edit `lib/Cn/Util.pm`, never the shim, and do not delete
 the shim while anything still says `use Util`.
 
 `old.util.pm` is code retired from the module years ago, kept for reference
@@ -79,13 +84,19 @@ and not shipped.
 
 ## Layout
 
-- `lib/Util/Con.pm` -- the module, with its POD after the
+- `lib/Cn/Util.pm` -- the module, with its POD after the
   `# from md2pod.pl` line. That POD is generated from `README.md`.
 - `t/00-load.t` -- exports, the `p`/`np` stubs (including into a package other
   than `main`, and leaving one the caller already has), and `autodie`.
 - `t/<function>.t` -- one file per function or pair of functions.
+- `t/windows-names.t` -- no path or package segment is a Windows device name.
 - `md2pod.pl` -- README.md to POD, then `Test::Pod` and `CPAN::Changes` checks.
 - `dzil.sh` -- the release script.
+- `compile.sh` -- builds, tests and installs into the first perl on `PATH`,
+  in the root. That is safe only because `dist.ini`'s `[MakeMaker::Awesome]`
+  gives `Makefile.PL` a `MY::libscan` that drops root-level `*.pm` and `*.pl`
+  (the shim among them) and `DIR => []`, which stops EUMM building a
+  leftover `Cn-Util-$VERSION/`.
 - `security.policy.pl` -- writes `SECURITY.md`; see its header.
 
 ## Documentation
@@ -97,7 +108,7 @@ bulleted instead.
 
 ## Releasing
 
-`$VERSION` in `lib/Util/Con.pm` is the source of truth (`[VersionFromModule]`).
+`$VERSION` in `lib/Cn/Util.pm` is the source of truth (`[VersionFromModule]`).
 Bump it there, add a `Changes` section under that version, then:
 
     sh dzil.sh    # md2pod.pl, dzil release, dzil build, copy Makefile.PL back

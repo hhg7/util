@@ -4,7 +4,7 @@ require 5.010001;
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
-use Util::Con;
+use Cn::Util;
 
 # Default format is '.%02d' (two-decimal-ish fractional suffix).
 is( format_commas(1234567.89), '1,234,567.89', 'seven-digit number with cents' );

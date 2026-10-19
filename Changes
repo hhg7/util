@@ -1,4 +1,30 @@
-Revision history for Util-Con
+Revision history for Cn-Util
+
+0.022 2026-10-18 CDT (Claude Opus 5.5 helped)
+
+ [Renamed to Cn::Util]
+
+ - The distribution is now `Cn-Util`, installing `Cn::Util`, and a script changes `use Util::Cn` to `use Cn::Util`. The functions, and what each returns, are unchanged.
+
+ [`dir`]
+
+ - On Windows, a recursive `dir` of a path written with `\`, such as the one `File::Temp`'s `tempdir` returns, no longer returns that directory itself, and with `cpu` above 1 no longer returns each top-level subdirectory twice. `File::Find` 1.44 reports such a path with `/`, so the walk did not recognise its own starting point and returned it whenever it passed `tests`, while the parallel walk's top level, joined onto the `\` path, listed each subdirectory once with each separator. Every path `dir` returns on Windows now uses `/`. Strawberry Perl 5.42 failed two tests of `t/dir.t` on this.
+
+ - On Windows, `dir => 'C:/'` and `dir => 'C:\'` list the root of drive C. The trailing slash of `C:/` was stripped, and `C:` alone is the current directory on drive C.
+
+ [Test suite]
+
+ - `t/windows-names.t`, listed under 0.021, is in the distribution. It had not been added to git, and `dzil build` gathers from git's index, so the 0.021 tarball left it out.
+
+0.021 2026-10-16 CDT (Claude Opus 5.5 helped)
+
+ [Renamed to Util::Cn]
+
+ - The distribution is now `Util-Cn`, installing `Util::Cn`, and a script changes `use Util::Con` to `use Util::Cn`. `Util-Con` could not be built on Windows: `CON` is a reserved device name there, so `make` died creating `blib\lib\auto\Util\Con` with "Invalid argument" before any test ran. The functions, and what each returns, are unchanged.
+
+ [Test suite]
+
+ - `t/windows-names.t` is new and fails if a file, directory or package segment of the distribution is named after a Windows device such as `CON`, `NUL` or `COM1`.
 
 0.02 2026-10-15 CDT (Claude Opus 5.5 helped)
 

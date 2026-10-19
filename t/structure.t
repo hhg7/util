@@ -4,7 +4,7 @@ require 5.010001;
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
-use Util::Con;
+use Cn::Util;
 
 sub shape { structure($_[0], output => 'string', color => 0) }
 

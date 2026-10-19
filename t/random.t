@@ -6,7 +6,7 @@ require 5.010001;
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
-use Util::Con;
+use Cn::Util;
 
 my %h = ( a => 1, b => 2, c => 3 );
 

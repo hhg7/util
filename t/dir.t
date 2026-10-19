@@ -8,7 +8,14 @@ use Test::More;
 use Test::Exception;
 use File::Temp qw(tempdir);
 use File::Spec;
-use Util::Con;
+use Cn::Util;
+
+# dir() reports paths with "/" on Windows, whichever separator it was given.
+sub fwd {
+	my ($path) = @_;
+	$path =~ tr{\\}{/} if $^O eq 'MSWin32';
+	return $path;
+}
 
 # Build an isolated tree so results don't depend on the checkout's contents.
 my $root = tempdir( CLEANUP => 1 );
@@ -95,6 +102,28 @@ for my $case (
 }
 is( scalar(dir(dir => $wide, recursive => 1, cpu => 2, regex => '\.txt$')), 24,
 	'cpu => 2 finds every .txt at both depths' );
+
+# On Windows, tempdir() joins with "\", and File::Find turns that into "/" in
+# what it reports.  The serial walk then failed to recognise its own root and
+# listed it, so 'tests => d' and 'no tests' above differed from the parallel
+# walk -- whose top level was joined onto the "\" path -- on Strawberry Perl
+# 5.42.  Elsewhere these pass either way.
+{
+	my @d = (dir(dir => $wide, recursive => 1, tests => 'd'),
+	         dir(dir => $wide, recursive => 1, tests => 'd', cpu => 2));
+	ok( !(grep { $_ eq fwd($wide) || $_ eq $wide } @d), 'a recursive walk does not report its root' );
+	ok( !(grep { m{\\} } @d), 'a recursive walk reports no "\\" separator' )
+		if $^O eq 'MSWin32';
+}
+SKIP: {
+	skip 'drive roots are a Windows matter', 2 unless $^O eq 'MSWin32';
+	my ($vol) = File::Spec->splitpath($wide);
+	my @top = dir(dir => "$vol\\", tests => 'd');
+	ok( scalar(@top) && !(grep { index($_, "$vol/") != 0 || m{\A\Q$vol\E//} } @top),
+		qq{dir => "$vol\\" lists the root of $vol as "$vol/x"} );
+	is_deeply( [sort @top], [sort(dir(dir => "$vol/", tests => 'd'))],
+		qq{dir => "$vol\\" and dir => "$vol/" agree} );
+}
 SKIP: {
 	skip 'symlink() is not available here', 1 unless $have_symlink;
 	ok( !(grep { m{link_to_d1/} } dir(dir => $wide, recursive => 1, cpu => 2, tests => '')),
@@ -115,7 +144,7 @@ SKIP: {
 		my @parallel = sort(dir(dir => $link, recursive => 1, cpu => 2));
 		is( scalar @serial, 36, 'serial recursive dir walks a symlinked root' );
 		is_deeply( \@parallel, \@serial, 'cpu => 2 matches serial under a symlinked root' );
-		ok( !(grep { index($_, "$link/") != 0 } @serial), 'paths are reported under the link, not its target' );
+		ok( !(grep { index($_, fwd($link) . '/') != 0 } @serial), 'paths are reported under the link, not its target' );
 		is( scalar(dir(dir => "$link/", recursive => 1)), 36, 'a trailing slash on the link makes no difference' );
 	}
 }
@@ -151,7 +180,7 @@ throws_ok { dir(dir => $root, tests => 'Z') }
 throws_ok { dir(dir => $root, regex => '(') }
 	qr/Invalid regex/, 'rejects an uncompilable regex';
 # The alternation is historical: Util.pm, which this module was before it was
-# Util::Con, used to `use autodie`, which intercepted opendir and threw "Can't
+# Cn::Util, used to `use autodie`, which intercepted opendir and threw "Can't
 # opendir(...)" before the module's own `or die "Cannot open directory"` could
 # run. autodie is gone now (it cost ~15 ms of startup and is a compile-time
 # pragma, so it could not be made lazy), so this always takes the second

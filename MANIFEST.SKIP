@@ -8,8 +8,8 @@
 ^MANIFEST\.bak$
 
 # Release archives and unpacked distribution directories
-^Util-Con-.*\.tar\.gz$
-^Util-Con-[\d\.]+/?$
+^Cn-Util-.*\.tar\.gz$
+^Cn-Util-[\d\.]+/?$
 
 # The compatibility shim for "use Util" and the code retired from it
 ^Util\.pm$
@@ -22,6 +22,7 @@
 # Local development and helper scripts (Ignores all .pl EXCEPT Makefile.PL)
 ^(?!Makefile\.PL$).*\.pl$
 ^dzil\.sh$
+^compile\.sh$
 ^CLAUDE\.md$
 ^\.claude/
 
