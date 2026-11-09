@@ -4,3 +4,10 @@ blib/
 pm_to_blib
 MYMETA.*
 .build/
+# What dzil.sh leaves behind: the release tarball and the "dzil build"
+# directory, under this name and both earlier ones.  [Git::GatherDir] builds
+# from the index, so one that is committed and then deleted stops the next
+# "dzil build" with "... does not exist!".
+/Cn-Util-*
+/Util-Cn-*
+/Util-Con-*
