@@ -111,7 +111,8 @@ bulleted instead.
 `$VERSION` in `lib/Cn/Util.pm` is the source of truth (`[VersionFromModule]`).
 Bump it there, add a `Changes` section under that version, then:
 
-    sh dzil.sh    # md2pod.pl, dzil release, dzil build, copy Makefile.PL back
+    sh dzil.sh    # md2pod.pl, git add, dzil build, copy Makefile.PL back,
+                  # dzil release, git commit -m $VERSION, git push
 
 `Changes` is edited by hand and is the only copy of the notes. A version line
 is `<version> <date> <tz>`, entries group under `[Bracketed headings]`, and an
@@ -120,4 +121,8 @@ section is the model. `md2pod.pl` runs `changes_file_ok`, so a malformed edit
 fails there rather than at upload.
 
 `[Git::GatherDir]` builds from the git index, so a new file has to be
-`git add`ed before `dzil build` will include it.
+`git add`ed before `dzil build` will include it. `dzil.sh` stages every change
+to a tracked file and every new file under `lib/` and `t/`; a new file anywhere
+else it lists and leaves alone, so one that should ship (a new root document,
+which `[PruneFiles]` must also whitelist) is added by hand. Nothing is
+committed until `dzil release` has uploaded.
